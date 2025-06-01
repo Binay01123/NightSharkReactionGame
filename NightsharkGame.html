@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nightshark Reaction Time Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 14px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px;
+            padding: 21px;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 21px;
+        }
+
+        .game-content {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-container {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 21px;
+        }
+
+        .game-title {
+            font-size: 22px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 7px;
+        }
+
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding: 11px;
+            background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+            border-radius: 7px;
+            border: 1px solid #dee2e6;
+        }
+
+        .round-info {
+            font-size: 13px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .progress-bar-container {
+            flex: 1;
+            margin: 0 14px;
+            background-color: #e9ecef;
+            border-radius: 7px;
+            height: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 7px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .stats-preview {
+            font-size: 10px;
+            color: #6c757d;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 21px;
+            margin-bottom: 21px;
+        }
+
+        .signal-area {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            flex: 2;
+            height: 245px;
+            position: relative;
+            border-radius: 11px;
+            border: 2px solid #444;
+            overflow: hidden;
+        }
+
+        .signal-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(102, 126, 234, 0.1), transparent);
+            pointer-events: none;
+        }
+
+        .round-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            z-index: 1;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .signal-text {
+            position: absolute;
+            top: 21px;
+            left: 21px;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            padding: 11px 21px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #212529;
+            border-radius: 7px;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 4px 11px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 11px;
+        }
+
+        .btn {
+            padding: 14px 21px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 3px 11px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-sell {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            box-shadow: 0 3px 11px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #007bff, #6610f2);
+            color: white;
+            font-size: 12px;
+            padding: 12px;
+            box-shadow: 0 3px 11px rgba(0, 123, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-start.waiting {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            box-shadow: 0 3px 11px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-start.next-round {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            box-shadow: 0 3px 11px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: width 0.1s linear;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            font-size: 12px;
+            padding: 12px;
+            box-shadow: 0 3px 11px rgba(108, 117, 125, 0.3);
+            margin-top: 8px;
+        }
+
+        .challenge-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin-top: auto;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled::before {
+            display: none;
+        }
+
+        .status-area {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 18px;
+            text-align: center;
+            font-size: 13px;
+            color: #495057;
+            border-radius: 11px;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .waiting-message {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .results-section {
+            /* margin-top: 21px; - removed since it's now in its own container */
+        }
+
+        .results-header {
+            font-size: 17px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 7px;
+            overflow: hidden;
+            box-shadow: 0 4px 11px rgba(0,0,0,0.1);
+            margin-bottom: 14px;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #495057, #6c757d);
+            color: white;
+            padding: 11px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .results-table td {
+            padding: 8px 11px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 10px;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .pass {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .final-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            padding: 14px;
+            border-radius: 11px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 4px 11px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulse {
+            0% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.05);
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+        }
+
+        .signal-active {
+            animation: pulse 0.6s infinite;
+            background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
+            color: #212529 !important;
+            border-color: #ffc107 !important;
+            box-shadow: 0 0 21px rgba(255, 215, 0, 0.5) !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                max-width: 700px;
+            }
+            
+            .results-container {
+                min-width: unset;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .signal-area {
+                height: 175px;
+            }
+            
+            .final-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-container {
+                flex-direction: column;
+                gap: 7px;
+            }
+            
+            .progress-bar-container {
+                margin: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-content">
+            <div class="game-header">
+                <h1 class="game-title">🦈 Nightshark Reaction Challenge</h1>
+            </div>
+
+            <div class="progress-container">
+                <div class="round-info">
+                    <span id="currentRound">Round 1</span> of <span id="totalRounds">10</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="stats-preview" id="statsPreview">
+                    Accuracy: 0% | Avg: 0ms
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="signal-area">
+                    <div class="round-display">
+                        <span id="roundDisplay">ROUND 1</span>
+                    </div>
+                    <div class="signal-text" id="signalText">SIGNAL: NONE</div>
+                </div>
+                
+                <div class="controls">
+                    <div class="action-buttons">
+                        <button class="btn btn-buy" id="buyBtn" disabled>📈 BUY</button>
+                        <button class="btn btn-sell" id="sellBtn" disabled>📉 SELL</button>
+                    </div>
+                    
+                    <div class="challenge-buttons">
+                        <button class="btn btn-start" id="startBtn">
+                            ▶️ START CHALLENGE
+                            <div class="btn-progress-bar" id="btnProgressBar" style="width: 0%"></div>
+                        </button>
+                        <button class="btn btn-reset" id="resetBtn">🔄 RESET CHALLENGE</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-area" id="statusArea">
+                Welcome to the Nightshark Challenge! Test your trading reflexes across 10 rounds.
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div class="results-section">
+                <h2 class="results-header">📊 Round Results</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Signal</th>
+                            <th>Your Action</th>
+                            <th>Reaction Time</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+
+                <div class="final-stats hidden" id="finalStats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="finalAccuracy">0%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="finalAvgTime">0ms</div>
+                        <div class="stat-label">Average Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="finalBestTime">0ms</div>
+                        <div class="stat-label">Best Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="finalScore">0</div>
+                        <div class="stat-label">Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class NightsharkGame {
+            constructor() {
+                this.signalText = document.getElementById('signalText');
+                this.roundDisplay = document.getElementById('roundDisplay');
+                this.buyBtn = document.getElementById('buyBtn');
+                this.sellBtn = document.getElementById('sellBtn');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.btnProgressBar = document.getElementById('btnProgressBar');
+                this.statusArea = document.getElementById('statusArea');
+                this.resultsTableBody = document.getElementById('resultsTableBody');
+                this.progressBar = document.getElementById('progressBar');
+                this.currentRoundEl = document.getElementById('currentRound');
+                this.statsPreview = document.getElementById('statsPreview');
+                this.finalStats = document.getElementById('finalStats');
+                
+                this.gameState = 'ready'; // ready, waiting, active, finished, completed
+                this.currentSignal = 'NONE';
+                this.signalStartTime = null;
+                this.timeoutId = null;
+                this.progressIntervalId = null;
+                
+                // Game tracking
+                this.totalRounds = 10;
+                this.currentRound = 0;
+                this.results = [];
+                
+                // Cache keys
+                this.CACHE_KEY_RESULTS = 'nightshark_results';
+                this.CACHE_KEY_ROUND = 'nightshark_current_round';
+                this.CACHE_KEY_TIMESTAMP = 'nightshark_timestamp';
+                
+                this.initEventListeners();
+                this.loadFromCache();
+                this.updateDisplay();
+            }
+            
+            // Cache management methods
+            saveToCache() {
+                try {
+                    localStorage.setItem(this.CACHE_KEY_RESULTS, JSON.stringify(this.results));
+                    localStorage.setItem(this.CACHE_KEY_ROUND, this.currentRound.toString());
+                    localStorage.setItem(this.CACHE_KEY_TIMESTAMP, Date.now().toString());
+                } catch (error) {
+                    console.warn('Failed to save to cache:', error);
+                }
+            }
+            
+            loadFromCache() {
+                try {
+                    const savedResults = localStorage.getItem(this.CACHE_KEY_RESULTS);
+                    const savedRound = localStorage.getItem(this.CACHE_KEY_ROUND);
+                    const savedTimestamp = localStorage.getItem(this.CACHE_KEY_TIMESTAMP);
+                    
+                    // Check if cache is recent (within last 24 hours)
+                    const cacheAge = Date.now() - parseInt(savedTimestamp || '0');
+                    const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+                    
+                    if (savedResults && savedRound && cacheAge < maxCacheAge) {
+                        this.results = JSON.parse(savedResults);
+                        this.currentRound = parseInt(savedRound);
+                        
+                        // Restore table data
+                        this.restoreTableFromCache();
+                        this.updateStats();
+                        
+                        // If game was completed, show final stats
+                        if (this.currentRound >= this.totalRounds && this.results.length >= this.totalRounds) {
+                            this.showCompletedGame();
+                        } else if (this.currentRound > 0) {
+                            // Game was in progress
+                            this.statusArea.textContent = `⚡ Game resumed! Continue from round ${this.currentRound + 1}`;
+                            this.statusArea.className = 'status-area waiting-message';
+                        }
+                    } else {
+                        // Clear old cache
+                        this.clearCache();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load from cache:', error);
+                    this.clearCache();
+                }
+            }
+            
+            restoreTableFromCache() {
+                this.resultsTableBody.innerHTML = '';
+                this.results.forEach(result => {
+                    this.addResultToTable(result, false); // false = don't scroll
+                });
+            }
+            
+            clearCache() {
+                try {
+                    localStorage.removeItem(this.CACHE_KEY_RESULTS);
+                    localStorage.removeItem(this.CACHE_KEY_ROUND);
+                    localStorage.removeItem(this.CACHE_KEY_TIMESTAMP);
+                } catch (error) {
+                    console.warn('Failed to clear cache:', error);
+                }
+            }
+            
+            showCompletedGame() {
+                this.gameState = 'completed';
+                this.updateDisplay();
+                this.calculateAndShowFinalStats();
+                this.finalStats.classList.remove('hidden');
+                this.statusArea.textContent = `🏁 Previous challenge completed! Start a new challenge to play again.`;
+                this.statusArea.className = 'status-area success-message';
+                this.setButtonState('start', '▶️ NEW CHALLENGE');
+                this.startBtn.disabled = false;
+            }
+            
+            initEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.buyBtn.addEventListener('click', () => this.handleAction('BUY'));
+                this.sellBtn.addEventListener('click', () => this.handleAction('SELL'));
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+            }
+            
+            startGame() {
+                // Only clear data when starting a completely new game series
+                if (this.gameState === 'completed' || (this.gameState === 'ready' && this.currentRound === 0)) {
+                    // Start new game - clear cache and reset
+                    this.clearCache();
+                    this.currentRound = 0;
+                    this.results = [];
+                    this.finalStats.classList.add('hidden');
+                    this.resultsTableBody.innerHTML = '';
+                    this.updateDisplay();
+                }
+                
+                if (this.gameState !== 'ready' && this.gameState !== 'finished') return;
+                
+                this.currentRound++;
+                this.updateDisplay();
+                this.saveToCache(); // Save current round progress
+                
+                if (this.currentRound > this.totalRounds) {
+                    this.completeGame();
+                    return;
+                }
+                
+                this.startRound();
+            }
+            
+            startRound() {
+                this.gameState = 'waiting';
+                this.currentSignal = 'NONE';
+                this.updateSignal('NONE');
+                this.setButtonState('waiting', '⏳ WAITING...');
+                this.buyBtn.disabled = false;
+                this.sellBtn.disabled = false;
+                
+                this.statusArea.textContent = `Round ${this.currentRound}: Get ready... Signal coming soon!`;
+                this.statusArea.className = 'status-area waiting-message';
+                
+                // Random delay between 3-8 seconds
+                const delay = Math.random() * 5000 + 3000;
+                
+                this.timeoutId = setTimeout(() => {
+                    this.showSignal();
+                }, delay);
+            }
+            
+            showSignal() {
+                if (this.gameState !== 'waiting') return;
+                
+                this.gameState = 'active';
+                const signals = ['BUY', 'SELL'];
+                this.currentSignal = signals[Math.floor(Math.random() * signals.length)];
+                this.signalStartTime = Date.now();
+                
+                this.updateSignal(this.currentSignal);
+                this.signalText.classList.add('signal-active');
+                
+                this.statusArea.textContent = `🚨 Signal: ${this.currentSignal}! Click the corresponding button NOW!`;
+                this.statusArea.className = 'status-area';
+            }
+            
+            updateSignal(signal) {
+                this.signalText.textContent = `SIGNAL: ${signal}`;
+            }
+            
+            handleAction(action) {
+                if (this.gameState === 'ready' || this.gameState === 'completed') {
+                    return;
+                }
+                
+                if (this.gameState === 'waiting') {
+                    // Too early! Don't count as a round, restart the same round
+                    if (this.timeoutId) {
+                        clearTimeout(this.timeoutId);
+                        this.timeoutId = null;
+                    }
+                    
+                    this.showError('⚠️ TOO EARLY! Wait for the signal. Restarting this round...');
+                    
+                    // Reset to ready state and restart the same round after a delay
+                    this.gameState = 'ready';
+                    this.currentSignal = 'NONE';
+                    this.updateSignal('NONE');
+                    this.signalText.classList.remove('signal-active');
+                    this.buyBtn.disabled = true;
+                    this.sellBtn.disabled = true;
+                    this.setButtonState('start', '▶️ START CHALLENGE');
+                    
+                    // Automatically restart the same round after 2 seconds
+                    setTimeout(() => {
+                        this.startRound();
+                    }, 2000);
+                    return;
+                }
+                
+                if (this.gameState === 'active') {
+                    const reactionTime = Date.now() - this.signalStartTime;
+                    const isCorrect = action === this.currentSignal;
+                    
+                    this.recordResult(this.currentSignal, action, reactionTime, isCorrect);
+                    
+                    if (isCorrect) {
+                        this.showSuccess(`🎉 Excellent! Reaction time: ${reactionTime}ms`);
+                    } else {
+                        this.showError(`❌ Wrong button! Signal was ${this.currentSignal}, you clicked ${action}`);
+                    }
+                    
+                    this.finishRound();
+                }
+            }
+            
+            recordResult(signal, action, reactionTime, isCorrect, note = '') {
+                const result = {
+                    round: this.currentRound,
+                    signal: signal,
+                    action: action,
+                    reactionTime: reactionTime,
+                    isCorrect: isCorrect,
+                    note: note,
+                    timestamp: Date.now()
+                };
+                
+                this.results.push(result);
+                this.addResultToTable(result);
+                this.updateStats();
+                this.saveToCache(); // Save after each result
+            }
+            
+            addResultToTable(result, shouldScroll = true) {
+                const row = document.createElement('tr');
+                const resultText = result.note || (result.isCorrect ? 'PASS' : 'FAIL');
+                const resultClass = result.isCorrect ? 'pass' : 'fail';
+                const timeDisplay = result.reactionTime > 0 ? `${result.reactionTime}ms` : '-';
+                
+                row.innerHTML = `
+                    <td>${result.round}</td>
+                    <td>${result.signal}</td>
+                    <td>${result.action}</td>
+                    <td>${timeDisplay}</td>
+                    <td class="${resultClass}">${resultText}</td>
+                `;
+                
+                this.resultsTableBody.appendChild(row);
+                
+                // Scroll to the new row only if requested
+                if (shouldScroll) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            updateStats() {
+                const validResults = this.results.filter(r => r.reactionTime > 0);
+                const correctResults = this.results.filter(r => r.isCorrect);
+                
+                const accuracy = this.results.length > 0 ? 
+                    Math.round((correctResults.length / this.results.length) * 100) : 0;
+                
+                const avgTime = validResults.length > 0 ? 
+                    Math.round(validResults.reduce((sum, r) => sum + r.reactionTime, 0) / validResults.length) : 0;
+                
+                this.statsPreview.textContent = `Accuracy: ${accuracy}% | Avg: ${avgTime}ms`;
+            }
+            
+            updateDisplay() {
+                const progress = (this.currentRound / this.totalRounds) * 100;
+                this.progressBar.style.width = `${progress}%`;
+                this.currentRoundEl.textContent = `Round ${Math.max(1, this.currentRound)}`;
+                this.roundDisplay.textContent = `ROUND ${Math.max(1, this.currentRound)}`;
+            }
+            
+            finishRound() {
+                this.gameState = 'finished';
+                this.signalText.classList.remove('signal-active');
+                this.buyBtn.disabled = true;
+                this.sellBtn.disabled = true;
+                
+                if (this.currentRound < this.totalRounds) {
+                    this.setButtonState('next-round', '⏳ NEXT ROUND...');
+                    
+                    // Automatically start next round after 2 seconds
+                    setTimeout(() => {
+                        this.gameState = 'ready';
+                        this.startGame();
+                    }, 2000);
+                } else {
+                    this.completeGame();
+                }
+            }
+            
+            completeGame() {
+                this.gameState = 'completed';
+                this.updateDisplay();
+                this.calculateAndShowFinalStats();
+                this.finalStats.classList.remove('hidden');
+                
+                this.statusArea.textContent = `🏁 Challenge Complete! Check your final stats below.`;
+                this.statusArea.className = 'status-area success-message';
+                
+                this.setButtonState('start', '▶️ NEW CHALLENGE');
+                this.gameState = 'ready';
+                this.currentRound = 0;
+                
+                // Clear cache after completing all rounds
+                setTimeout(() => {
+                    this.clearCache();
+                }, 5000); // Clear after 5 seconds to allow user to see final stats
+            }
+            
+            calculateAndShowFinalStats() {
+                const validResults = this.results.filter(r => r.reactionTime > 0);
+                const correctResults = this.results.filter(r => r.isCorrect);
+                
+                const accuracy = Math.round((correctResults.length / this.results.length) * 100);
+                const avgTime = validResults.length > 0 ? 
+                    Math.round(validResults.reduce((sum, r) => sum + r.reactionTime, 0) / validResults.length) : 0;
+                const bestTime = validResults.length > 0 ? 
+                    Math.min(...validResults.map(r => r.reactionTime)) : 0;
+                const score = correctResults.reduce((sum, r) => {
+                    // Score based on accuracy and speed
+                    const timeBonus = Math.max(0, 1000 - r.reactionTime);
+                    return sum + 100 + Math.round(timeBonus / 10);
+                }, 0);
+                
+                // Update final stats
+                document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
+                document.getElementById('finalAvgTime').textContent = `${avgTime}ms`;
+                document.getElementById('finalBestTime').textContent = bestTime > 0 ? `${bestTime}ms` : '-';
+                document.getElementById('finalScore').textContent = score;
+            }
+            
+            showError(message) {
+                this.statusArea.textContent = message;
+                this.statusArea.className = 'status-area error-message';
+            }
+            
+            showSuccess(message) {
+                this.statusArea.textContent = message;
+                this.statusArea.className = 'status-area success-message';
+            }
+            
+            resetGame() {
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                    this.timeoutId = null;
+                }
+                
+                // Clear all game data
+                this.clearCache();
+                this.currentRound = 0;
+                this.results = [];
+                this.gameState = 'ready';
+                this.currentSignal = 'NONE';
+                this.signalStartTime = null;
+                
+                // Reset UI elements
+                this.updateSignal('NONE');
+                this.signalText.classList.remove('signal-active');
+                this.resultsTableBody.innerHTML = '';
+                this.finalStats.classList.add('hidden');
+                this.updateDisplay();
+                this.updateStats();
+                
+                this.setButtonState('start', '▶️ START CHALLENGE');
+                
+                this.statusArea.textContent = 'Welcome to the Nightshark Challenge! Test your trading reflexes across 10 rounds.';
+                this.statusArea.className = 'status-area';
+            }
+            
+            setButtonState(state, text = null) {
+                // Clear all state classes
+                this.startBtn.classList.remove('waiting', 'next-round');
+                this.btnProgressBar.style.width = '0%';
+                
+                // Clear any existing progress interval
+                if (this.progressIntervalId) {
+                    clearInterval(this.progressIntervalId);
+                    this.progressIntervalId = null;
+                }
+                
+                switch(state) {
+                    case 'start':
+                        if (text) this.startBtn.textContent = text;
+                        this.startBtn.disabled = false;
+                        break;
+                    case 'waiting':
+                        this.startBtn.classList.add('waiting');
+                        if (text) this.startBtn.textContent = text;
+                        this.startBtn.disabled = true;
+                        break;
+                    case 'next-round':
+                        this.startBtn.classList.add('next-round');
+                        if (text) this.startBtn.textContent = text;
+                        this.startBtn.disabled = true;
+                        this.startProgressBar(2000); // 2 second countdown
+                        break;
+                }
+            }
+            
+            startProgressBar(duration) {
+                const startTime = Date.now();
+                this.progressIntervalId = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min((elapsed / duration) * 100, 100);
+                    this.btnProgressBar.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(this.progressIntervalId);
+                        this.progressIntervalId = null;
+                    }
+                }, 50); // Update every 50ms for smooth animation
+            }
+        }
+        
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new NightsharkGame();
+        });
+    </script>
+</body>
+</html>
