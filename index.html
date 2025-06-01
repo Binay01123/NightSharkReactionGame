@@ -728,8 +728,8 @@
                 this.statusArea.textContent = `Round ${this.currentRound}: Get ready... Signal coming soon!`;
                 this.statusArea.className = 'status-area waiting-message';
                 
-                // Random delay between 3-8 seconds
-                const delay = Math.random() * 5000 + 3000;
+                // Random delay between 2-8 seconds
+                const delay = Math.random() * 6000 + 2000;
                 
                 this.timeoutId = setTimeout(() => {
                     this.showSignal();
@@ -869,11 +869,11 @@
                 if (this.currentRound < this.totalRounds) {
                     this.setButtonState('next-round', '⏳ NEXT ROUND...');
                     
-                    // Automatically start next round after 2 seconds
+                    // Start next round immediately
                     setTimeout(() => {
                         this.gameState = 'ready';
                         this.startGame();
-                    }, 2000);
+                    }, 0);
                 } else {
                     this.completeGame();
                 }
@@ -983,7 +983,7 @@
                         this.startBtn.classList.add('next-round');
                         if (text) this.startBtn.textContent = text;
                         this.startBtn.disabled = true;
-                        this.startProgressBar(2000); // 2 second countdown
+                        this.startProgressBar(0); // No countdown needed
                         break;
                 }
             }
